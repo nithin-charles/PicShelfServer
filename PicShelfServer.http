@@ -1,0 +1,6 @@
+@PicShelfServer_HostAddress = http://localhost:5263
+
+GET {{PicShelfServer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

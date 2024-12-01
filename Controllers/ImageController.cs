@@ -46,6 +46,7 @@ namespace PicShelfServer.Controllers
                     FileSizeInBytes = request.File.Length,
                     FileName = request.FileName,
                     FileDescription = request.FileDescription,
+                    FolderName = request.FolderName != null ? request.FolderName : "Others"
                 };
 
 
@@ -57,6 +58,20 @@ namespace PicShelfServer.Controllers
             }
 
             return BadRequest(ModelState);
+        }
+
+        [HttpPost]
+        [Route("AddFolder")]
+        public Task<Folder> AddFolder(string folderName)
+        {
+            return _imageService.AddFolder(folderName);
+        }
+
+        [HttpPost]
+        [Route("DeleteFolder")]
+        public Task<Folder> DeleteFolder(string folderName)
+        {
+            return _imageService.RemoveFolder(folderName);
         }
 
         private void ValidateFileUpload(ImageUploadRequestDto request)

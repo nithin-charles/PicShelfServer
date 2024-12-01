@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PicShelfServer.DbContexts;
 
@@ -11,9 +12,11 @@ using PicShelfServer.DbContexts;
 namespace PicShelfServer.Migrations.PicShelfResourceDb
 {
     [DbContext(typeof(PicShelfResourceDbContext))]
-    partial class PicShelfResourceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241201143709_AddedFolderTable")]
+    partial class AddedFolderTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,13 +38,6 @@ namespace PicShelfServer.Migrations.PicShelfResourceDb
                     b.HasKey("Id");
 
                     b.ToTable("Folders");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("e45fd846-f89b-44f9-9372-fc24c3395cea"),
-                            FolderName = "Others"
-                        });
                 });
 
             modelBuilder.Entity("PicShelfServer.Models.Domain.Image", b =>

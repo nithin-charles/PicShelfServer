@@ -9,5 +9,7 @@ namespace PicShelfServer.Models.DTO
         public required string FileName { get; set; }
 
         public string? FileDescription { get; set; }
+
+        public string? FolderName { get; set;}
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PicShelfServer.DbContexts;
 using PicShelfServer.Models.Domain;
+using System.ComponentModel.DataAnnotations;
 
 namespace PicShelfServer.Services
 {
@@ -48,6 +49,34 @@ namespace PicShelfServer.Services
             await dbContext.SaveChangesAsync();
 
             return image;
+        }
+
+        public async Task<Folder> AddFolder(string folderName)
+        {
+            if (await dbContext.Folders.AnyAsync(x => x.FolderName == folderName))
+            {
+                throw new ValidationException("Folder already exists.");
+            }
+            var folder = new Folder
+            {
+                FolderName = folderName,
+            };
+            await this.dbContext.Folders.AddAsync(folder);
+            await this.dbContext.SaveChangesAsync();
+
+            return await dbContext.Folders.SingleOrDefaultAsync(x => x.FolderName == folderName);
+        }
+
+        public async Task<Folder?> RemoveFolder(string folderName)
+        {
+            var folder = await  dbContext.Folders.SingleOrDefaultAsync(folder => folder.FolderName == folderName);
+            if (folder == null)
+            {
+                return null;
+            }
+            this.dbContext.Folders.Remove(folder);
+            await this.dbContext.SaveChangesAsync();
+            return folder;
         }
     }
 }

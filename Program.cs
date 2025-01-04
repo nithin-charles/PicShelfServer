@@ -9,6 +9,9 @@ using Microsoft.OpenApi.Models;
 using PicShelfServer.DbContexts;
 using PicShelfServer.Services;
 using System.Text;
+using PicShelfServer;
+using PicShelfServer.Middlewares;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,13 +27,14 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
 
-    options.SwaggerDoc("v1", new OpenApiInfo { Title = "NZ Walks API", Version = "v1" });
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "PicShelf API", Version = "v1" });
     options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
     {
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
-        Scheme = JwtBearerDefaults.AuthenticationScheme
+        Scheme = JwtBearerDefaults.AuthenticationScheme,
+        BearerFormat = "JWT",
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -50,6 +54,7 @@ builder.Services.AddSwaggerGen(options =>
             new List<string>()
         }
     });
+    options.OperationFilter<AddAuthorizationHeaderOperationFilter>();
 });
 
 builder.Services.AddDbContext<PicShelfAuthDbContext>(options =>
@@ -78,7 +83,7 @@ builder.Services.Configure<IdentityOptions>(options =>
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    .AddJwtBearer("Bearer",options =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -96,7 +101,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AngularApp", builder =>
     {
-        builder.WithOrigins("http://localhost:4201");
+        builder.WithOrigins("http://localhost:4201").AllowAnyHeader().AllowAnyMethod();
         builder.AllowAnyHeader();
         builder.AllowAnyMethod();
         builder.AllowCredentials();
@@ -116,6 +121,8 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AngularApp");
 
 //app.UseMiddleware<ExceptionHandlerMiddleware>();
+app.UseMiddleware<AddBearerMiddleware>();
+
 
 app.UseHttpsRedirection();
 
@@ -127,7 +134,8 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "Images")),
     RequestPath = "/Images"
 });
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.MapControllers();
-
 app.Run();

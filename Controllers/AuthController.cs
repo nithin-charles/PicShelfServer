@@ -25,9 +25,18 @@ namespace PicShelfServer.Controllers
         {
             return Ok("Hi welcome to Pic Shelf Server!");
         }
+        
+        [HttpGet("test")]
+        public IActionResult TestEndpoint([FromHeader(Name = "Authorization")] string authHeader)
+        {
+            // Console.WriteLine($"Authorization Header: {authHeader}");
+            var msg = authHeader;
+            return Ok(authHeader);
+        }
+
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        // [Authorize(Roles = "Admin")]
         [Route("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequestDto)
         {

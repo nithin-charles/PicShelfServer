@@ -7,6 +7,7 @@ namespace PicShelfServer.Services
 {
     public class ImageService : IImageService
     {
+        private readonly string _imageFolderPath = Path.Combine(Directory.GetCurrentDirectory(), "Images");
         private readonly IWebHostEnvironment webHostEnvironment;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly PicShelfResourceDbContext dbContext;
@@ -30,6 +31,46 @@ namespace PicShelfServer.Services
             return image?.FilePath ?? "Image not found";
         }
 
+
+        public async Task<IReadOnlyCollection<Image>> GetPicByFolder(string folderName)
+        {
+            return await dbContext.Images.Where(img => img.FolderName == folderName).ToListAsync();
+        }
+
+        public void DeletePic(Guid id)
+        {
+            var img = dbContext.Images.FirstOrDefault(img => img.Id == id);
+            if(img != null)
+            {
+                var imageName= img.FileName;
+                var filePath = Path.Combine(_imageFolderPath, imageName);
+                try
+                {
+                    System.IO.File.Delete(filePath);
+                }
+                catch (Exception ex)
+                {
+                    throw new ValidationException($"Internal server error: {ex.Message}");
+                }
+                dbContext.Images.Remove(img);
+                dbContext.SaveChanges();
+            }
+        }
+
+        public async Task<Image> MoveToFolder(Guid imageId, string folderName)
+        {
+            var image = await dbContext.Images.SingleOrDefaultAsync(image => image.Id.Equals(imageId));
+            if (image == null) return null;
+            var existingFolder = await dbContext.Folders.SingleOrDefaultAsync(folder => folder.FolderName.Equals(folderName));
+            if(existingFolder == null)
+            {
+                throw new ArgumentException("No such folder name");
+            }
+            image.FolderName = folderName;
+            await dbContext.SaveChangesAsync();
+            return image;
+        }
+
         public async Task<Image> Upload(Image image)
         {
             var localFilePath = Path.Combine(webHostEnvironment.ContentRootPath, "Images",
@@ -49,6 +90,11 @@ namespace PicShelfServer.Services
             await dbContext.SaveChangesAsync();
 
             return image;
+        }
+
+        public async Task<IEnumerable<Folder>> GetALlFolders()
+        {
+            return await dbContext.Folders.ToListAsync();
         }
 
         public async Task<Folder> AddFolder(string folderName)

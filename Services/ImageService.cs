@@ -71,6 +71,18 @@ namespace PicShelfServer.Services
             return image;
         }
 
+        public async Task<bool> IsFolderEmpty(string folderName)
+        {
+            // var folder = await dbContext.Folders.SingleOrDefaultAsync(folder => folder.FolderName.Equals(folderId));
+            // if(folder == null)
+            // {
+            //     throw new ArgumentException("No such folder");
+            // }
+            // return folder.IsEmpty;
+            var isExist = await dbContext.Images.AnyAsync(image => image.FolderName.Equals(folderName));
+            return !isExist;
+        }
+
         public async Task<Image> Upload(Image image)
         {
             var localFilePath = Path.Combine(webHostEnvironment.ContentRootPath, "Images",

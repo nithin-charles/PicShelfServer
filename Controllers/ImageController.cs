@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using PicShelfServer.Models.Domain;
@@ -126,17 +127,57 @@ namespace PicShelfServer.Controllers
             return await _imageService.GetALlFolders();
         }
         [HttpPost]
-        [Route("AddFolder")]
+        [Route("AddFolder/{folderName}")]
         public Task<Folder> AddFolder(string folderName)
         {
             return _imageService.AddFolder(folderName);
         }
 
-        [HttpPost]
-        [Route("DeleteFolder")]
-        public Task<Folder> DeleteFolder(string folderName)
+        [HttpDelete]
+        [Route("DeleteFolder/{folderName}")]
+        public async Task<IActionResult> DeleteFolder(string folderName)
         {
-            return _imageService.RemoveFolder(folderName);
+            if (string.Equals(folderName, "Others", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { Message = "Deleting 'Others' folder is not allowed." });
+            }
+
+            var isEmpty = await _imageService.IsFolderEmpty(folderName);
+            if (!isEmpty)
+            {
+                return BadRequest(new { Message = $"Folder '{folderName}' is not empty." });
+            }
+
+            var deletedFolder = await _imageService.RemoveFolder(folderName);
+            if (deletedFolder == null)
+            {
+                return NotFound(new { Message = $"Folder '{folderName}' does not exist." });
+            }
+
+            return Ok(deletedFolder);
+        }
+
+
+        [HttpGet]
+        [Route("IsFolderEmpty/{folderId}")]
+        public async Task<bool> IsFolderEmpty(Guid folderId)
+        {
+            if (folderId == Guid.Empty)
+            {
+                throw new ValidationException("Folder id is empty.");
+            }
+            return await _imageService.IsFolderEmpty(folderId.ToString());
+        }
+
+        /// <summary>
+        /// Updates the Folder status i.e, Empty or NotEmpty
+        /// </summary>
+        /// <param name="folderId"></param>
+        [HttpPost]
+        [Route("FolderStatus")]
+        public void FolderStatus(Guid folderId)
+        {
+            
         }
 
         private void ValidateFileUpload(ImageUploadRequestDto request)

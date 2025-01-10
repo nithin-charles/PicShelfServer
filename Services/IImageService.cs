@@ -13,5 +13,7 @@ namespace PicShelfServer.Services
         Task<Folder> AddFolder(string folderName);
         Task<Folder?> RemoveFolder(string folderName);
         Task<Image> MoveToFolder(Guid imageId, string folderName);
+
+        Task<bool> IsFolderEmpty(string folderId);
     }
 }
